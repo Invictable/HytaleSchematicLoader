@@ -1,38 +1,40 @@
-# Hytale Example Plugin
+# Hytale Schematic Loader
 
-An example plugin for Hytale servers demonstrating basic plugin functionality.
+A basic plugin that loads and pastes worldedit schematics in Hytale
 
-## Features
+## Commands
 
-- `/example info` - Display plugin information
-- `/example tools` - Give the player a set of crude tools (once per player)
-- Door interaction event - Receive a door item when opening a door for the first time
+- `/schem list` - Lists all schematics
+- `/schem load <name>` - Loads a specific schematic
+- '/schem paste' - paste recently loaded schematic relative to the player's location
 
-## Building
+## Info
 
-```bash
-./gradlew build
-```
+Currently supports schematics created with WorldEdit on Minecraft 1.8
+Will soon support Sponge 3 schematics (modern minecraft worldedit / sponge format)
+(it might already, i wrote the code but havent tested it)
 
-The compiled plugin JAR will be in `build/libs/`.
+Current Issues:
+- Rotations are stored, but not applied to hytale blocks
+- Slab top / bottom information doesnt load
+- Not all block conversions are supported
+- Modern schematic versions havent been tested
 
-## Installation
+## Setup
 
-1. Copy the JAR file to your server's `mods/` directory
-2. Restart the server
+Add schematics to mods -> cc.invic_schematic-loader -> schematics
+Restart server after adding new schematics
 
-## Requirements
+## Material Conversions
 
-- Hytale Server with plugin support
-- Java 25+
-- `HytaleServer.jar` in the project root for compilation
+Legacy Schematics map from id:data to namespace:itemname.
+from there modern minecraft maps from namespace:itemname to a Hytale block string.
+Modern schematics directly map from namespace:itemname to Hytale block strings.
 
-## Documentation
+Legacy schematics use data for both rotations and color info.
+ex. stained clay data is for color, but chest data is for rotation. when overriding legacy materials only enter the id. This makes the parser treat the data as a rotation.
 
-For a comprehensive guide on how to create Hytale plugins, see the community-made documentation:
-
-👉 [Hytale Plugin Development Guide](https://hytale-docs.pages.dev/getting-started/introduction/)
-
-## License
-
-MIT
+Under mods -> cc.invic_schematic-loader -> you can find hytale_overrides.txt and legacy_overrides.txt.
+You can specify override mappings for both legacy -> modern minecraft and modern minecraft -> hytale block string entries.  
+This overrides the in code mappings, or lets you map modded minecraft items or unmapped items. If a mapping fails, stone will be placed.
+Restart the server after editing.
