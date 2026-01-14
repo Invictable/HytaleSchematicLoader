@@ -463,7 +463,7 @@ public class LegacyBlockMapper {
 
         if(!LEGACY_TO_MODERN.containsKey(key))
         {
-            return LEGACY_TO_MODERN.getOrDefault(String.valueOf(blockId),"Rock_Stone");
+            return LEGACY_TO_MODERN.getOrDefault(String.valueOf(blockId),"minecraft:stone");
         }
         else
             return LEGACY_TO_MODERN.get(key);

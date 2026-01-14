@@ -1194,7 +1194,7 @@ public class MinecraftToHytaleMapper {
     }
 
     public static String getHytaleBlock(String minecraftBlock) {
-        String hytaleBlock = MINECRAFT_TO_HYTALE.getOrDefault(minecraftBlock, "");
+        String hytaleBlock = MINECRAFT_TO_HYTALE.getOrDefault(minecraftBlock, "Rock_Stone");
         
         if (hytaleBlock != null && !hytaleBlock.isEmpty()) {
             if (!BlockType.getAssetMap().getAssetMap().containsKey(hytaleBlock)) {
