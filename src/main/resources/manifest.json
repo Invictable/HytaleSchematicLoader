@@ -1,0 +1,20 @@
+{
+  "Group": "cc.invic",
+  "Name": "SchematicLoader",
+  "Version": "1.0.0",
+  "Description": "Loader for Minecraft .schematic files",
+  "Main": "cc.invic.SchematicLoader",
+  "Authors": [
+    {
+      "Name": "Invictable",
+      "Website": "https://invic.cc"
+    }
+  ],
+  "Website": "https://invic.c",
+  "ServerVersion": ">=0.0.1",
+  "Dependencies": {},
+  "OptionalDependencies": {},
+  "LoadBefore": {},
+  "DisabledByDefault": false,
+  "IncludesAssetPack": false
+}

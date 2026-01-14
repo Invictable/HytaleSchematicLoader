@@ -1,0 +1,13 @@
+# Legacy Block Override Mappings
+# Format: blockId:dataValue=minecraft:block_name
+# Lines starting with # are comments
+# Empty lines are ignored
+#
+# Example:
+# 1:0=minecraft:stone
+# 50=minecraft:chest
+# 159:1=minecraft:orange_terracotta
+#
+# blocks like torches, chests use the second int (data) as rotational information. for these block overrides, enter them as the example above
+# blocks like terracotta use data as colors, ex. 159 is hardened clay. a value of 1 provides orange color.
+# The modern block name can use any namespace but one must be specified. ex, minecraft:stone 

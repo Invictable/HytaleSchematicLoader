@@ -1,0 +1,16 @@
+# Hytale Override Mappings
+# Format: minecraft:block_name=Hytale_Block_Name
+# Lines starting with # are comments
+# Empty lines are ignored
+#
+# Example:
+# minecraft:stone=Rock_Stone
+# modname:custom_block=Rock_Stone
+#
+# Note: The Minecraft key must contain at least one colon (:)
+# The Hytale block name will be validated against the BlockType asset map
+# If the block doesn't exist, it will default to Rock_Stone and log a warning
+
+minecraft:sponge=Ore_Cobalt_Stone
+minecraft:wet_sponge=Ore_Cobalt_Basalt
+
