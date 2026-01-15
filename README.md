@@ -29,11 +29,12 @@ from there modern minecraft maps from namespace:itemname to a Hytale block strin
 Modern schematics directly map from namespace:itemname to Hytale block strings.
 
 Legacy schematics use data for both rotations and color info.
-ex. stained clay data is for color, but chest data is for rotation. when overriding legacy materials only enter the id. This makes the parser treat the data as a rotation.
+ex. stained clay data is for color, but chest data is for rotation. 
+When overriding legacy materials that have rotational data, only enter the block id. This makes the parser treat the data as a rotation. Otherwise enter it as blockid:data.
 
 Under mods -> cc.invic_schematic-loader -> you can find hytale_overrides.txt and legacy_overrides.txt.
 You can specify override mappings for both legacy -> modern minecraft and modern minecraft -> hytale block string entries.  
 This overrides the in code mappings, or lets you map modded minecraft items or unmapped items. If a mapping fails, stone will be placed.
-If a minecraft block maps to 'skip' it wont be processed, similiar to worldedits -a argument if used with air. By default, air will be skipped. 
+If a minecraft block maps to hytale string 'skip' it wont be processed, similiar to worldedits -a argument if used with air. By default, air will be skipped. 
 If you want air to replace blocks, override minecraft:air=Empty. Empty is Hytale's air block.
 Restart the server after editing configs.
