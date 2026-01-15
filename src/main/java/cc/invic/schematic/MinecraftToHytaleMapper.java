@@ -1198,6 +1198,14 @@ public class MinecraftToHytaleMapper {
         
         if (hytaleBlock != null && !hytaleBlock.isEmpty()) {
             if (!BlockType.getAssetMap().getAssetMap().containsKey(hytaleBlock)) {
+                if(hytaleBlock.equals("skip"))
+                {
+                    if (logger != null && !warnedBlocks.contains(minecraftBlock)) {
+                        warnedBlocks.add(minecraftBlock);
+                        logger.at(Level.WARNING).log("Minecraft block  '" + minecraftBlock + "' was mapped to 'skip' and will not be pasted");
+                    }
+                    return "skip";
+                }
                 if (logger != null && !warnedBlocks.contains(hytaleBlock)) {
                     warnedBlocks.add(hytaleBlock);
                     logger.at(Level.WARNING).log("Hytale block '" + hytaleBlock + "' (mapped from '" + minecraftBlock + "') does not exist in BlockType asset map. Defaulting to Rock_Stone.");
@@ -1212,15 +1220,6 @@ public class MinecraftToHytaleMapper {
                 logger.at(Level.WARNING).log("Minecraft block  '" + minecraftBlock + "' has no Hytale mapping. Defaulting to Rock_Stone.");
             }
             return "Rock_Stone";
-        }
-
-        if(hytaleBlock.equals("skip"))
-        {
-            if (logger != null && !warnedBlocks.contains(minecraftBlock)) {
-                warnedBlocks.add(minecraftBlock);
-                logger.at(Level.WARNING).log("Minecraft block  '" + minecraftBlock + "' was mapped to 'skip' and will not be pasted");
-            }
-            return "skip";
         }
 
         return hytaleBlock;
