@@ -1,6 +1,8 @@
 package cc.invic.schematic;
 
+import cc.invic.SchematicLoader;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.asset.type.blocktype.config.Rotation;
 import net.querz.nbt.io.NBTUtil;
 import net.querz.nbt.io.NamedTag;
 import net.querz.nbt.tag.CompoundTag;
@@ -76,7 +78,7 @@ public class SchematicParser {
         byte[] blockData = root.getByteArray("Data");
         byte[] addBlocks = root.containsKey("AddBlocks") ? root.getByteArray("AddBlocks") : null;
 
-        Map<String, Integer> schematicaMapping = parseSchematicaMapping(root);
+        //   Map<String, Integer> schematicaMapping = parseSchematicaMapping(root);
 
         int weOriginX = root.containsKey("WEOriginX") ? root.getInt("WEOriginX") : 0;
         int weOriginY = root.containsKey("WEOriginY") ? root.getInt("WEOriginY") : 0;
@@ -94,16 +96,16 @@ public class SchematicParser {
             logger.at(Level.INFO).log("WorldEdit Offset: (" + weOffsetX + ", " + weOffsetY + ", " + weOffsetZ + ")");
         }
 
-        Map<BlockLocation, BlockData> blockMap = parseBlocks(blocks, blockData, addBlocks, width, height, length);
+        Map<BlockLocation, BlockData> blockMap = parseLegacyBlocks(blocks, blockData, addBlocks, width, height, length);
         
-        parseTileEntities(root, blockMap);
+      //  parseTileEntities(root, blockMap);
 
         return new SchematicData(
             schematicFile.getName(),
             width, height, length,
             materials,
             blockMap,
-            schematicaMapping,
+            null,
             weOriginX, weOriginY, weOriginZ,
             weOffsetX, weOffsetY, weOffsetZ,
             0,
@@ -111,8 +113,8 @@ public class SchematicParser {
         );
     }   
 
-    private Map<BlockLocation, BlockData> parseBlocks(byte[] blocks, byte[] blockData, byte[] addBlocks,
-                                                     int width, int height, int length) {
+    private Map<BlockLocation, BlockData> parseLegacyBlocks(byte[] blocks, byte[] blockData, byte[] addBlocks,
+                                                            int width, int height, int length) {
         Map<BlockLocation, BlockData> blockMap = new HashMap<>();
         int totalBlocks = width * height * length;
 
@@ -139,20 +141,57 @@ public class SchematicParser {
 
             int data = blockData[index] & 0x0F;
 
-//            if(blockId == 50)
-//                logger.at(Level.INFO).log("Found a torch "+data);
+//            if(blockId == 46)
+//                logger.at(Level.INFO).log("Found a chest "+data);
 //            if(blockId == 163)
 //                logger.at(Level.INFO).log("Found a acacia stairs"+data);
 
 
             if (blockId != -1) {
                 String modernName = LegacyBlockMapper.getModernBlock(blockId, data);
+
+                if (MinecraftToHytaleMapper.getHytaleBlock(modernName).equals("skip"))
+                    continue;
+
                 BlockLocation location = new BlockLocation(x, y, z);
                 boolean hasRotation = false;
+                BlockData block;
                 if(LegacyBlockMapper.dataIsRotation(blockId,data))
+                {
                     hasRotation=true;
-                BlockData block = new BlockData(blockId, data, modernName, hasRotation);
-                blockMap.put(location, block);
+                    int extra = -1;
+                    if(modernName.contains("stair"))
+                    {
+                        // stairs rotation data is 0-3. starting at 4, pattern repeats, but for upside down stairs.
+                        if(data > 3)
+                            extra = 1; // upside down
+                        else extra = 0;//normal
+                    }
+                    else if(modernName.contains("slab"))
+                    {
+                        // slab types are 1-7. after 7, they repeat but for upside down slab variants
+                        if(data>7)
+                            extra = 1; // upsidedown
+                        else extra = 0; //normal
+                    }
+                    block = new BlockData(blockId, adjustRotation(modernName,data), modernName, hasRotation,extra);
+
+                }
+                else
+                {
+                    int extra = -1;
+                    if(modernName.contains("slab"))
+                    {
+                        // slab types are 1-7. after 7, they repeat but for upside down slab variants
+                        if(data>7)
+                            extra = 1; // upside down
+                        else extra = 0; // normal
+                    }
+                    hasRotation=false;
+                    block = new BlockData(blockId, data, modernName, hasRotation,extra);
+
+                }
+                 blockMap.put(location, block);
             }
         }
 
@@ -160,106 +199,140 @@ public class SchematicParser {
         return blockMap;
     }
 
-    private Map<String, Integer> parseSchematicaMapping(CompoundTag root) {
-        Map<String, Integer> mapping = new HashMap<>();
-
-        if (root.containsKey("SchematicaMapping")) {
-            CompoundTag mappingTag = root.getCompoundTag("SchematicaMapping");
-            logger.at(Level.INFO).log("SchematicaMapping found:");
-
-            for (Map.Entry<String, Tag<?>> entry : mappingTag.entrySet()) {
-                String blockName = entry.getKey();
-                Tag<?> tag = entry.getValue();
-                int blockId = 0;
-                
-                if (tag instanceof net.querz.nbt.tag.IntTag) {
-                    blockId = ((net.querz.nbt.tag.IntTag) tag).asInt();
-                } else if (tag instanceof net.querz.nbt.tag.ShortTag) {
-                    blockId = ((net.querz.nbt.tag.ShortTag) tag).asShort();
-                } else if (tag instanceof net.querz.nbt.tag.ByteTag) {
-                    blockId = ((net.querz.nbt.tag.ByteTag) tag).asByte();
-                }
-                
-                mapping.put(blockName, blockId);
-                logger.at(Level.INFO).log("  " + blockName + " -> " + blockId);
-            }
+    // Different blocks have rotation data saved in unexpected orders
+    private int adjustRotation(String blockName,int rotationData)
+    {
+        if(blockName.contains("stairs"))
+        {
+            // 4 -> 0
+            // for upside down
+            if(rotationData > 3)
+                rotationData-=4;
+            return switch (rotationData) {
+                case 1 -> 3;      // west
+                case 2 -> 2;   // South
+                case 0 -> 1;  // East
+                case 3 -> 0;  // North
+                default -> 0;
+            };
         }
-
-        return mapping;
+        else if(blockName.contains("chest"))
+        {
+            return switch (rotationData) {
+                case 0 -> 0;      // north
+                case 1 -> 0;   // north
+                case 2 -> 0;  // north
+                case 3 -> 2;  // south
+                case 4 -> 3;  // west
+                case 5 -> 1;  // east
+                default -> 0;
+            };
+        }
+//        else if(blockName.contains("torch"))
+//        {
+//            return switch (rotationData) {
+//                case 0 -> 5;      // up
+//                case 1 -> 1;   // east
+//                case 2 -> 3;  // west
+//                case 3 -> 2;  // south
+//                case 4 -> 0;  // north
+//                default -> 0;
+//            };
+//        }
+        return rotationData;
     }
 
-    private void parseTileEntities(CompoundTag root, Map<BlockLocation, BlockData> blockMap) {
-        if (!root.containsKey("TileEntities")) {
-            return;
-        }
-
-        ListTag<?> tileEntitiesList = (ListTag<?>) root.get("TileEntities");
-        if (tileEntitiesList == null || tileEntitiesList.size() == 0) {
-            return;
-        }
-
-        logger.at(Level.INFO).log("Parsing " + tileEntitiesList.size() + " tile entities...");
-        int addedCount = 0;
-        int skippedUnknown = 0;
-        int skippedExisting = 0;
-
-        for (Tag<?> tag : tileEntitiesList) {
-            if (!(tag instanceof CompoundTag)) {
-               // logger.at(Level.WARNING).log("Tile entity not a compound tag");
-                continue;
-            }
-
-            CompoundTag tileEntity = (CompoundTag) tag;
-            
-            if (!tileEntity.containsKey("x") || !tileEntity.containsKey("y") || !tileEntity.containsKey("z")) {
-              //  logger.at(Level.WARNING).log("No x y and z for tile entity ");
-                continue;
-            }
-
-            int x = tileEntity.getInt("x");
-            int y = tileEntity.getInt("y");
-            int z = tileEntity.getInt("z");
-            
-            String tileEntityId = null;
-            if (tileEntity.containsKey("id")) {
-                Tag<?> idTag = tileEntity.get("id");
-                if (idTag instanceof net.querz.nbt.tag.StringTag) {
-                    tileEntityId = ((net.querz.nbt.tag.StringTag) idTag).getValue();
-                }
-            }
-
-            if (tileEntityId == null) {
-              //  logger.at(Level.WARNING).log("No tile entity ID at (" + x + ", " + y + ", " + z + ")");
-                continue;
-            }
-
-            String modernBlockName = TILE_ENTITY_TO_MODERN_BLOCK.get(tileEntityId);
-            if (modernBlockName == null) {
-              //  logger.at(Level.WARNING).log("Unknown tile entity type: " + tileEntityId + " at (" + x + ", " + y + ", " + z + ")");
-                skippedUnknown++;
-                continue;
-            }
-
-            BlockLocation location = new BlockLocation(x, y, z);
-            
-            if (!blockMap.containsKey(location)) {
-                BlockData blockData = new BlockData(0, 0, modernBlockName,false);
-                blockMap.put(location, blockData);
-                addedCount++;
-              //  logger.at(Level.INFO).log("Added tile entity block: " + modernBlockName + " (" + tileEntityId + ") at (" + x + ", " + y + ", " + z + ")");
-            } else {
-                    BlockData blockData = new BlockData(0, 0, modernBlockName,false);
-                    blockMap.put(location, blockData);
-                    addedCount++;
-                    //logger.at(Level.).log("Replaced air with tile entity block: " + modernBlockName + " at (" + x + ", " + y + ", " + z + ")");
-            }
-        }
-
-        logger.at(Level.INFO).log("Tile entity summary: " + addedCount + " added, " + skippedExisting + " skipped (existing), " + skippedUnknown + " skipped (unknown)");
-    }
+//    private Map<String, Integer> parseSchematicaMapping(CompoundTag root) {
+//        Map<String, Integer> mapping = new HashMap<>();
+//
+//        if (root.containsKey("SchematicaMapping")) {
+//            CompoundTag mappingTag = root.getCompoundTag("SchematicaMapping");
+//            logger.at(Level.INFO).log("SchematicaMapping found:");
+//
+//            for (Map.Entry<String, Tag<?>> entry : mappingTag.entrySet()) {
+//                String blockName = entry.getKey();
+//                Tag<?> tag = entry.getValue();
+//                int blockId = 0;
+//
+//                if (tag instanceof net.querz.nbt.tag.IntTag) {
+//                    blockId = ((net.querz.nbt.tag.IntTag) tag).asInt();
+//                } else if (tag instanceof net.querz.nbt.tag.ShortTag) {
+//                    blockId = ((net.querz.nbt.tag.ShortTag) tag).asShort();
+//                } else if (tag instanceof net.querz.nbt.tag.ByteTag) {
+//                    blockId = ((net.querz.nbt.tag.ByteTag) tag).asByte();
+//                }
+//
+//                mapping.put(blockName, blockId);
+//                logger.at(Level.INFO).log("  " + blockName + " -> " + blockId);
+//            }
+//        }
+//
+//        return mapping;
+//    }
+//    private void parseTileEntities(CompoundTag root, Map<BlockLocation, BlockData> blockMap) {
+//        if (!root.containsKey("TileEntities")) {
+//            return;
+//        }
+//
+//        ListTag<?> tileEntitiesList = (ListTag<?>) root.get("TileEntities");
+//        if (tileEntitiesList == null || tileEntitiesList.size() == 0) {
+//            return;
+//        }
+//
+//        logger.at(Level.INFO).log("Parsing " + tileEntitiesList.size() + " tile entities...");
+//        int addedCount = 0;
+//        int skippedUnknown = 0;
+//        int skippedExisting = 0;
+//
+//        for (Tag<?> tag : tileEntitiesList) {
+//            if (!(tag instanceof CompoundTag)) {
+//               // logger.at(Level.WARNING).log("Tile entity not a compound tag");
+//                continue;
+//            }
+//
+//            CompoundTag tileEntity = (CompoundTag) tag;
+//
+//            if (!tileEntity.containsKey("x") || !tileEntity.containsKey("y") || !tileEntity.containsKey("z")) {
+//              //  logger.at(Level.WARNING).log("No x y and z for tile entity ");
+//                continue;
+//            }
+//
+//            int x = tileEntity.getInt("x");
+//            int y = tileEntity.getInt("y");
+//            int z = tileEntity.getInt("z");
+//
+//            String tileEntityId = null;
+//            if (tileEntity.containsKey("id")) {
+//                Tag<?> idTag = tileEntity.get("id");
+//                if (idTag instanceof net.querz.nbt.tag.StringTag) {
+//                    tileEntityId = ((net.querz.nbt.tag.StringTag) idTag).getValue();
+//                }
+//            }
+//
+//            if (tileEntityId == null) {
+//              //  logger.at(Level.WARNING).log("No tile entity ID at (" + x + ", " + y + ", " + z + ")");
+//                continue;
+//            }
+//
+//            String modernBlockName = TILE_ENTITY_TO_MODERN_BLOCK.get(tileEntityId);
+//            if (modernBlockName == null) {
+//              //  logger.at(Level.WARNING).log("Unknown tile entity type: " + tileEntityId + " at (" + x + ", " + y + ", " + z + ")");
+//                skippedUnknown++;
+//                continue;
+//            }
+//
+//            BlockLocation location = new BlockLocation(x, y, z);
+//
+//            BlockData blockData = new BlockData(0, 0, modernBlockName,false);
+//            blockMap.put(location, blockData);
+//            addedCount++;
+//        }
+//
+//        logger.at(Level.INFO).log("Tile entity summary: " + addedCount + " added, " + skippedExisting + " skipped (existing), " + skippedUnknown + " skipped (unknown)");
+//    }
 
     private SchematicData parseSpongeSchematic(File schematicFile) throws IOException {
-        logger.at(Level.INFO).log("Parsing modern .schem format");
+        logger.at(Level.INFO).log("Parsing modern sponge .schem format");
 
         NamedTag namedTag = NBTUtil.read(schematicFile);
         CompoundTag root = (CompoundTag) namedTag.getTag();
@@ -291,21 +364,28 @@ public class SchematicParser {
                 weOriginZ = offset[2];
                 logger.at(Level.INFO).log("Offset: (" + weOriginX + ", " + weOriginY + ", " + weOriginZ + ")");
             }
+            else
+                logger.at(Level.INFO).log("badly sized offset: "+offset.length);
         }
+        else
+            logger.at(Level.INFO).log("no offset");
 
-        Map<Integer, String> palette = parseSpongeBlockPalette(schematic);
-        byte[] blockData = schematic.getByteArray("BlockData");
+
+        CompoundTag blocks = schematic.getCompoundTag("Blocks");
+        
+        Map<Integer, String> palette = parseSpongeBlockPalette(blocks);
+        byte[] blockData = blocks.getByteArray("Data");
         
         Map<BlockLocation, BlockData> blockMap = parseSpongeBlocks(blockData, palette, width, height, length);
         
-        parseSpongeBlockEntities(schematic, blockMap);
+       // parseSpongeBlockEntities(blocks, blockMap);
 
         return new SchematicData(
             schematicFile.getName(),
             width, height, length,
             "Sponge",
             blockMap,
-            new HashMap<>(),
+            null,
             weOriginX, weOriginY, weOriginZ,
             0, 0, 0,
             version,
@@ -369,9 +449,13 @@ public class SchematicParser {
             }
 
             String blockName = blockState;
+            if (MinecraftToHytaleMapper.getHytaleBlock(blockName).equals("skip"))
+               continue;
+
             int rotationData = 0;
             boolean hasRotation = false;
 
+            int extra = -1;
             if (blockState.contains("[")) {
                 int bracketIndex = blockState.indexOf('[');
                 blockName = blockState.substring(0, bracketIndex);
@@ -381,13 +465,12 @@ public class SchematicParser {
                 if (rotationData != -1) {
                     hasRotation = true;
                 }
+                extra = parseExtraData(properties);
             }
 
-            if (!blockName.equals("minecraft:air")) {
                 BlockLocation location = new BlockLocation(x, y, z);
-                BlockData block = new BlockData(0, rotationData, blockName, hasRotation);
+                BlockData block = new BlockData(0, rotationData, blockName, hasRotation,extra);
                 blockMap.put(location, block);
-            }
         }
 
         logger.at(Level.INFO).log("Parsed " + blockMap.size() + " blocks");
@@ -417,6 +500,35 @@ public class SchematicParser {
         return result;
     }
 
+    private int parseExtraData(String properties) {
+        String[] props = properties.split(",");
+
+        for (String prop : props) {
+            String[] keyValue = prop.split("=");
+            if (keyValue.length != 2) continue;
+
+            String key = keyValue[0].trim();
+            String value = keyValue[1].trim();
+
+            if (key.equals("type")) { // slabs
+                switch (value) {
+                    case "bottom": return 0;
+                    case "top": return 1;
+                    case "double": return 2;
+                }
+            }
+            if (key.equals("half")) { // stairs
+                switch (value) {
+                    case "bottom": return 0;
+                    case "top": return 1;
+                    case "double": return 2;
+                }
+            }
+        }
+
+        return -1;
+    }
+
     private int parseRotationFromProperties(String properties) {
         String[] props = properties.split(",");
         
@@ -436,7 +548,7 @@ public class SchematicParser {
                     case "up": return 4;
                     case "down": return 5;
                 }
-            } else if (key.equals("rotation")) {
+            } else if (key.equals("rotation")) { // signs
                 try {
                     int rotation = Integer.parseInt(value);
                     return rotation % 4;

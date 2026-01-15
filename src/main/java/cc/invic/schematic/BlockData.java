@@ -6,13 +6,16 @@ public class BlockData {
     private final String modernName;
     private final String hytaleName;
     private final boolean hasRotation;
+    private final int extra;
 
-    public BlockData(int blockId, int blockData, String modernName,boolean hasRotation) {
+
+    public BlockData(int blockId, int blockData, String modernName,boolean hasRotation, int extra) {
         this.blockId = blockId;
         this.blockData = blockData;
         this.modernName = modernName;
         this.hytaleName = MinecraftToHytaleMapper.getHytaleBlock(modernName);
         this.hasRotation = hasRotation;
+        this.extra = extra;
     }
 
     public int getBlockId() {
@@ -34,6 +37,18 @@ public class BlockData {
     public boolean hasRotation()
     {
         return hasRotation;
+    }
+
+    /**
+     * -1 = no data
+     * 0 = bottom half stair / slab
+     * 1 = top half stair / slab
+     * 2 = full block slab (probably wont be used)
+     * @return
+     */
+    public int getExtra()
+    {
+        return extra;
     }
 
     @Override

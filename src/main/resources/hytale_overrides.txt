@@ -10,6 +10,9 @@
 # Note: The Minecraft key must contain at least one colon (:)
 # The Hytale block name will be validated against the BlockType asset map
 # If the block doesn't exist, it will default to Rock_Stone and log a warning
+#
+# set an item to 'skip' to prevent it from being processed. this would be similar to the -a flag with WorldEdit if you set minecraft:air to skip
+# set an item to "Empty" to make it replace the blocks with air. this would be similar to worldedits default behavior if minecraft:air is mapped to Empty
 
 minecraft:sponge=Ore_Cobalt_Stone
 minecraft:wet_sponge=Ore_Cobalt_Basalt

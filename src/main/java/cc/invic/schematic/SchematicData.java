@@ -103,7 +103,7 @@ public class SchematicData {
     }
 
     public boolean hasWorldEditOffset() {
-        return weOffsetX != 0 || weOffsetY != 0 || weOffsetZ != 0;
+        return true;//weOffsetX != 0 || weOffsetY != 0 || weOffsetZ != 0;
     }
 
     public int getVersion() {

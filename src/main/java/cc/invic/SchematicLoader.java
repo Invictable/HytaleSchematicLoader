@@ -17,6 +17,7 @@ import com.hypixel.hytale.server.core.inventory.Inventory;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
+import com.hypixel.hytale.server.core.task.TaskRegistration;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
@@ -383,6 +384,7 @@ public class SchematicLoader extends JavaPlugin {
             }
         }
 
+        private static List<String> loadingPlayers = new ArrayList<>();
         class LoadSchematicCommand extends AbstractPlayerCommand {
             private final File schematicFile;
 
@@ -399,7 +401,13 @@ public class SchematicLoader extends JavaPlugin {
                                    @Nonnull World world) {
 
                 String username = playerRef.getUsername();
+                if(loadingPlayers.contains(username))
+                {
+                    context.sendMessage(Message.translation("You're already loading a schematic! Please wait."));
+                    return;
+                }
                 context.sendMessage(Message.translation("Loading schematic: " + schematicFile.getName() + "..."));
+                loadingPlayers.add(username);
 
                 scheduler.submit(() -> {
                     try {
@@ -423,8 +431,10 @@ public class SchematicLoader extends JavaPlugin {
                         context.sendMessage(Message.translation("Use /schem paste to paste it at your location"));
                         
                         getLogger().at(Level.INFO).log("Player " + username + " loaded schematic: " + schematicFile.getName());
+                        loadingPlayers.remove(username);
                     } catch (Exception e) {
                         context.sendMessage(Message.translation("Failed to load schematic: " + e.getMessage()));
+                        loadingPlayers.remove(username);
                         getLogger().at(Level.SEVERE).log("Failed to parse schematic for player " + username + ": " + schematicFile.getName(), e);
                     }
                 });
@@ -458,6 +468,7 @@ public class SchematicLoader extends JavaPlugin {
 
                 context.sendMessage(Message.translation("Pasting schematic: " + data.getFileName()));
                 context.sendMessage(Message.translation("Total blocks: " + data.getTotalBlocks()));
+
 
                 PasteUtil.paste(world, pos, data, scheduler);
 

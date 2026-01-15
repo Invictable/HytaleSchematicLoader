@@ -30,8 +30,8 @@ public class BlockBreakEventsystem extends EntityEventSystem<EntityStore, BreakB
         if(player ==null)
             return;
 
-        player.sendMessage(Message.raw(event.getBlockType().toString() + " mined"));
-        SchematicLoader.get().getLogger().atInfo().log(event.getBlockType().toString());
+       // player.sendMessage(Message.raw(event.getBlockType().toString() + " mined"));
+        //SchematicLoader.get().getLogger().atInfo().log(event.getBlockType().toString());
     }
 
     @NullableDecl

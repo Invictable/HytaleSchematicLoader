@@ -1,9 +1,12 @@
 package cc.invic.schematic;
 
+import cc.invic.SchematicLoader;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -12,7 +15,7 @@ public class MinecraftToHytaleMapper {
     private static HytaleLogger logger;
 
     static {
-        MINECRAFT_TO_HYTALE.put("minecraft:air", "");
+        MINECRAFT_TO_HYTALE.put("minecraft:air", "skip"); // Empty for air
         MINECRAFT_TO_HYTALE.put("minecraft:stone", "Rock_Stone");
         MINECRAFT_TO_HYTALE.put("minecraft:granite", "");
         MINECRAFT_TO_HYTALE.put("minecraft:polished_granite", "");
@@ -511,7 +514,6 @@ public class MinecraftToHytaleMapper {
         MINECRAFT_TO_HYTALE.put("minecraft:brain_coral_block", "");
         MINECRAFT_TO_HYTALE.put("minecraft:brain_coral_fan", "");
         MINECRAFT_TO_HYTALE.put("minecraft:brain_coral_wall_fan", "");
-        MINECRAFT_TO_HYTALE.put("minecraft:brick_stairs", "");
         MINECRAFT_TO_HYTALE.put("minecraft:brick_wall", "");
         MINECRAFT_TO_HYTALE.put("minecraft:brown_banner", "");
         MINECRAFT_TO_HYTALE.put("minecraft:brown_bed", "");
@@ -788,7 +790,6 @@ public class MinecraftToHytaleMapper {
         MINECRAFT_TO_HYTALE.put("minecraft:moss_carpet", "Plant_Moss_Rug_Green");
         MINECRAFT_TO_HYTALE.put("minecraft:mossy_cobblestone_slab", "");
         MINECRAFT_TO_HYTALE.put("minecraft:mossy_cobblestone_stairs", "");
-        MINECRAFT_TO_HYTALE.put("minecraft:mossy_cobblestone_wall", "");
         MINECRAFT_TO_HYTALE.put("minecraft:mossy_stone_brick_slab", "");
         MINECRAFT_TO_HYTALE.put("minecraft:mossy_stone_brick_stairs", "");
         MINECRAFT_TO_HYTALE.put("minecraft:mossy_stone_brick_wall", "");
@@ -1166,12 +1167,9 @@ public class MinecraftToHytaleMapper {
         MINECRAFT_TO_HYTALE.put("minecraft:weathered_lightning_rod", "");
         MINECRAFT_TO_HYTALE.put("minecraft:weeping_vines", "");
         MINECRAFT_TO_HYTALE.put("minecraft:weeping_vines_plant", "");
-        MINECRAFT_TO_HYTALE.put("minecraft:wheat", "Plant_Crop_Wheat_Block");
-        MINECRAFT_TO_HYTALE.put("minecraft:white_banner", "");
         MINECRAFT_TO_HYTALE.put("minecraft:white_bed", "Furniture_Village_Bed");
         MINECRAFT_TO_HYTALE.put("minecraft:white_candle", "");
         MINECRAFT_TO_HYTALE.put("minecraft:white_candle_cake", "");
-        MINECRAFT_TO_HYTALE.put("minecraft:white_wall_banner", "");
         MINECRAFT_TO_HYTALE.put("minecraft:wildflowers", "");
         MINECRAFT_TO_HYTALE.put("minecraft:wither_rose", "");
         MINECRAFT_TO_HYTALE.put("minecraft:wither_skeleton_skull", "");
@@ -1191,20 +1189,40 @@ public class MinecraftToHytaleMapper {
 
     public static void addOverride(String minecraftBlock, String hytaleBlock) {
         MINECRAFT_TO_HYTALE.put(minecraftBlock, hytaleBlock);
+        SchematicLoader.get().getLogger().atInfo().log("Hytale Override set: "+minecraftBlock+" -> "+hytaleBlock);
     }
 
+    static List<String> warnedBlocks = new ArrayList<>();
     public static String getHytaleBlock(String minecraftBlock) {
-        String hytaleBlock = MINECRAFT_TO_HYTALE.getOrDefault(minecraftBlock, "Rock_Stone");
+        String hytaleBlock = MINECRAFT_TO_HYTALE.get(minecraftBlock);
         
         if (hytaleBlock != null && !hytaleBlock.isEmpty()) {
             if (!BlockType.getAssetMap().getAssetMap().containsKey(hytaleBlock)) {
-                if (logger != null) {
+                if (logger != null && !warnedBlocks.contains(hytaleBlock)) {
+                    warnedBlocks.add(hytaleBlock);
                     logger.at(Level.WARNING).log("Hytale block '" + hytaleBlock + "' (mapped from '" + minecraftBlock + "') does not exist in BlockType asset map. Defaulting to Rock_Stone.");
                 }
                 return "Rock_Stone";
             }
         }
-        
+        else
+        {
+            if (logger != null && !warnedBlocks.contains(minecraftBlock)) {
+                warnedBlocks.add(minecraftBlock);
+                logger.at(Level.WARNING).log("Minecraft block  '" + minecraftBlock + "' has no Hytale mapping. Defaulting to Rock_Stone.");
+            }
+            return "Rock_Stone";
+        }
+
+        if(hytaleBlock.equals("skip"))
+        {
+            if (logger != null && !warnedBlocks.contains(minecraftBlock)) {
+                warnedBlocks.add(minecraftBlock);
+                logger.at(Level.WARNING).log("Minecraft block  '" + minecraftBlock + "' was mapped to 'skip' and will not be pasted");
+            }
+            return "skip";
+        }
+
         return hytaleBlock;
     }
 

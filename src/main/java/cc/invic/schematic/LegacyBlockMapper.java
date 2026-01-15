@@ -1,5 +1,7 @@
 package cc.invic.schematic;
 
+import cc.invic.SchematicLoader;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -126,7 +128,7 @@ public class LegacyBlockMapper {
         LEGACY_TO_MODERN.put("51:0", "minecraft:fire");
         LEGACY_TO_MODERN.put("52:0", "minecraft:spawner");
         LEGACY_TO_MODERN.put("53", "minecraft:oak_stairs");
-        LEGACY_TO_MODERN.put("54:0", "minecraft:chest");
+        LEGACY_TO_MODERN.put("54", "minecraft:chest");
         LEGACY_TO_MODERN.put("55:0", "minecraft:redstone_wire");
         LEGACY_TO_MODERN.put("56:0", "minecraft:diamond_ore");
         LEGACY_TO_MODERN.put("57:0", "minecraft:diamond_block");
@@ -454,6 +456,7 @@ public class LegacyBlockMapper {
 
     public static void addOverride(String legacyKey, String modernBlock) {
         LEGACY_TO_MODERN.put(legacyKey, modernBlock);
+        SchematicLoader.get().getLogger().atInfo().log("Legacy Override set: "+legacyKey+" -> "+modernBlock);
     }
 
     public static String getModernBlock(int blockId, int blockData) {
