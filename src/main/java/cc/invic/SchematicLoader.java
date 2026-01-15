@@ -15,6 +15,7 @@ import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.ecs.BreakBlockEvent;
 import com.hypixel.hytale.server.core.inventory.Inventory;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
+import com.hypixel.hytale.server.core.permissions.HytalePermissions;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.task.TaskRegistration;
@@ -331,11 +332,13 @@ public class SchematicLoader extends JavaPlugin {
         class SchematicListCommand extends CommandBase {
 
             SchematicListCommand() {
-                super("list", "example.commands.schematics.desc");
+                super("list", "Lists schematics present in folder. Restart after adding more.");
+                this.requirePermission("schematic.*");
             }
 
             @Override
             protected void executeSync(@Nonnull CommandContext context) {
+
                 File templatesDir = new File(getDataDirectory().toFile(), "schematics");
                 File[] files = templatesDir.listFiles();
                 
@@ -391,6 +394,7 @@ public class SchematicLoader extends JavaPlugin {
             LoadSchematicCommand(String schematicName, File schematicFile) {
                 super(schematicName, "Load schematic: " + schematicName);
                 this.schematicFile = schematicFile;
+                this.requirePermission("schematic.*");
             }
 
             @Override
@@ -445,6 +449,7 @@ public class SchematicLoader extends JavaPlugin {
 
             PasteCommand() {
                 super("paste", "example.commands.paste.desc");
+                this.requirePermission("schematic.*");
             }
 
             @Override
