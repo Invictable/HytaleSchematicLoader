@@ -6,19 +6,16 @@ A basic plugin that loads and pastes worldedit schematics in Hytale
 
 - `/schem list` - Lists all schematics
 - `/schem load <name>` - Loads a specific schematic
-- '/schem paste' - paste recently loaded schematic relative to the player's location
+- `/schem paste` - paste recently loaded schematic relative to the player's location
 
 ## Info
 
-Currently supports schematics created with WorldEdit on Minecraft 1.8
-Will soon support Sponge 3 schematics (modern minecraft worldedit / sponge format)
-(it might already, i wrote the code but havent tested it)
+Currently supports schematics created with WorldEdit on Minecraft 1.8 and Sponge V3 schematics.
+(.schem and .schematic)
 
 Current Issues:
-- Rotations are stored, but not applied to hytale blocks
-- Slab top / bottom information doesnt load
-- Not all block conversions are supported
-- Modern schematic versions havent been tested
+- Water / Lava aren't created as real liquids, they are liquid 'blocks' that don't flow.
+- Not all minecraft blocks are mapped. Feel free to add sensible default mappings as pull requests.
 
 ## Setup
 
@@ -37,4 +34,6 @@ ex. stained clay data is for color, but chest data is for rotation. when overrid
 Under mods -> cc.invic_schematic-loader -> you can find hytale_overrides.txt and legacy_overrides.txt.
 You can specify override mappings for both legacy -> modern minecraft and modern minecraft -> hytale block string entries.  
 This overrides the in code mappings, or lets you map modded minecraft items or unmapped items. If a mapping fails, stone will be placed.
-Restart the server after editing.
+If a minecraft block maps to 'skip' it wont be processed, similiar to worldedits -a argument if used with air. By default, air will be skipped. 
+If you want air to replace blocks, override minecraft:air=Empty. Empty is Hytale's air block.
+Restart the server after editing configs.
