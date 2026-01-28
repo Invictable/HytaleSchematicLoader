@@ -22,6 +22,10 @@ Current Issues:
 Add schematics to mods -> cc.invic_schematic-loader -> schematics
 Restart server after adding new schematics
 
+## Compiling
+
+run shadowJar under Gradlew tasks. Using build will appear to work but schematics will not load.
+
 ## Material Conversions
 
 Legacy Schematics map from id:data to namespace:itemname.
